@@ -1,1 +1,5 @@
 .git
+.vscode
+C/
+img.py
+batch.py
