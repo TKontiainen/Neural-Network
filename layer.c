@@ -70,3 +70,14 @@ void CalculateLayerActivations(layer layer, double* inputs, double* activations)
         *(activations + nodeOut) = Sigmoid(weightedOutput);
     }
 }
+
+// Apply the gradients
+void ApplyGradients(layer layer, double learnRate) {
+    int nodeIn, nodeOut;
+    for (nodeOut = 0; nodeOut < layer.numNodesOut; ++nodeOut) {
+        *(layer.biases + nodeOut) -= *(layer.gradientB + nodeOut) * learnRate;
+        for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
+            *(layer.weights + nodeOut * layer.numNodesIn + nodeIn) -= *(layer.gradientW + nodeOut * layer.numNodesIn + nodeIn) * learnRate;
+        }
+    }
+}

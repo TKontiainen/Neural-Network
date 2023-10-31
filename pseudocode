@@ -1,0 +1,39 @@
+Initialize the neural network:
+- Define the architecture (number of layers, number of neurons in each layer).
+- Initialize weights and biases with small random values.
+- Choose a learning rate (alpha).
+
+Training loop (repeat for a fixed number of epochs or until convergence):
+    for each training example (X, y):
+        Forward Propagation:
+        - Set the input layer's values as X.
+        - For each layer l from 2 to the output layer:
+            - Calculate the weighted sum of inputs for each neuron in layer l.
+            - Apply the activation function (e.g., sigmoid, ReLU) to the weighted sum to compute the output of each neuron.
+        
+        Calculate the network's output (the values in the output layer).
+
+        Backward Propagation:
+        - Calculate the output layer error:
+            output_error = y - predicted_output
+            delta_output = output_error * f'(weighted_sum_output)
+        
+        - For each layer l from the output layer to the second hidden layer (backward order):
+            - Calculate the error at layer l:
+                error_l = (weights[l+1] * delta_l+1) * f'(weighted_sum_l)
+            - Calculate delta_l using the error_l:
+                delta_l = error_l * f'(weighted_sum_l)
+        
+        Update Weights and Biases:
+        - Update the weights and biases for each neuron in each layer using the calculated delta values:
+            new_weight = old_weight + alpha * delta * input
+            new_bias = old_bias + alpha * delta
+
+    Calculate the total error (e.g., mean squared error) for this epoch.
+
+    If the total error is below a predefined threshold or after a fixed number of epochs:
+        Exit the training loop.
+
+    Optionally, decrease the learning rate alpha to improve convergence.
+
+Use the trained neural network for making predictions.

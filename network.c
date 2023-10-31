@@ -109,3 +109,16 @@ double AverageCost(network network, dataPoint* dataPoints, int numDataPoints) {
 
     return avg;
 }
+
+double DerivativeCostWrtActivation(double activation, double expectedActivation) {
+    return 2.0 * (activation - expectedActivation);
+}
+
+void ApplyAllGradients(network network, double learnRate) {
+    layer layer;
+    int numLayer;
+    for (numLayer = 0; numLayer < network.numLayers-1; ++numLayer) {
+        layer = *(network.layers+numLayer);
+        ApplyGradients(layer, learnRate);
+    }
+}

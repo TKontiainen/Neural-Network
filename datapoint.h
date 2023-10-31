@@ -6,4 +6,7 @@ typedef struct {
     double* expectedOutputs;
 } dataPoint;
 
+// Create new datapoint
+dataPoint DataPoint(double* inputs, double* expectedOutputs);
+
 #endif

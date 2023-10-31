@@ -29,4 +29,7 @@ void FreeLayer(layer layer);
 // Calculate the activations of a layer
 void CalculateLayerActivations(layer layer, double* inputs, double* activations);
 
+// Apply the gradients
+void ApplyGradients(layer layer, double learnRate);
+
 #endif

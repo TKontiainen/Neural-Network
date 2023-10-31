@@ -28,6 +28,5 @@ int main(int argc, char** argv) {
     printf("%lf\n", cost);
 
     FreeNetwork(network);
-
     return 0;
 }

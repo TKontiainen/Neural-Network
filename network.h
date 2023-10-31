@@ -31,4 +31,11 @@ double Cost(network network, dataPoint dataPoint);
 // Get the average cost for multiple datapoints
 double AverageCost(network network, dataPoint* dataPoints, int numDataPoints);
 
+// Derivative of the cost function with respect to the activation value
+double DerivativeCostWrtActivation(double activation, double expectedActivation);
+
+void CalculateGradients(network network);
+
+void ApplyAllGradients(network network, double learnRate);
+
 #endif
