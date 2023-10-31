@@ -2,7 +2,6 @@
 .git
 .vscode
 main
-TODO
 Py/batch.py
 Py/img.py
 Py/mincost.py
