@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
     dataPoint.inputs = inputs;
     dataPoint.expectedOutputs = expectedOutputs;
 
+    // Print the cost of the network
     double cost = Cost(network, dataPoint);
     printf("%lf\n", cost);
 
