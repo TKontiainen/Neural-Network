@@ -14,11 +14,6 @@ def MaxIndex(l):
         i += 1
     return a
 
-def Cost(output, expected_output):
-    cost = 0
-    for i in range(len(output)):
-        cost += (output[i] - expected_output[i]) ** 2
-    return cost
 
 class Layer:
     # Initialises the number of incoming and outgoing nodes, gradients, weights and biases
@@ -72,13 +67,27 @@ class Network:
         outputs = self.CalculateOutputs(inputs)
         return MaxIndex(outputs)
     
+    def NodeCost(self, activation, expected):
+        return (activation - expected) ** 2
+    
+    def PrtDrvCostWrtActivation(self, activation, expected):
+        return 2 * (activation - expected)
+    
+    def Cost(self, inputs, expected_outputs):
+        cost = 0
+        outputs = self.CalculateOutputs(inputs)
+        for i in range(len(outputs)):
+            cost += self.NodeCost(outputs[i], expected_outputs[i])
+        return cost
+
     def AvgCost(self, data):
-        costs = []
+        cost = 0
+        i = 0
         for inputs, expected_outputs in data.items():
-            cost = Cost(self.CalculateOutputs(inputs), expected_outputs)
-            costs.append(cost)
-        avg_cost = sum(costs) / len(costs)
-        return avg_cost
+            cost += self.Cost(inputs, expected_outputs)
+            i += 1
+        return cost / i
+    
     
     def ApplyAllGradients(self, learnrate):
         for layer in self.layers:
@@ -129,8 +138,10 @@ def main():
     
     shuffle(data) # Shuffle the data
 
+    data, test_data = data[:42], dict(data[42:])
+
     # Create The Mini Batches
-    num_batches = 6
+    num_batches = 7
     batch_size = len(data) // num_batches
     mini_batches = []
     for i in range(0, len(data)-batch_size+1, batch_size):
@@ -141,12 +152,15 @@ def main():
     
     i = 1
     cost = network.AvgCost(data)
-    for i in range(1000):
+    for _ in range(1000):
         for batch in mini_batches:
-            network.Learn(batch, 0.50*cost*2)
+            network.Learn(batch, cost) 
         cost = network.AvgCost(data)
         print(i, round(cost, 5))
         i += 1
+
+    if cost < 0.1:
+        print('\n'.join([str(layer.weights) for layer in network.layers]))
 
     correct = 0
 
@@ -158,6 +172,18 @@ def main():
             print(f"Input: {inputs} Output: {'pois' if output else 'safe'} Expected: {'pois' if expected_output == pois else 'safe'}")
         
     print(f"correct: {correct}/{len(data.keys())}")
+
+    correct = 0
+
+    for inputs, expected_output in test_data.items():
+        output = network.Classify(inputs)
+        if output == (0 if expected_output == safe else 1):
+            correct += 1
+        else:
+            print(f"Input: {inputs} Output: {'pois' if output else 'safe'} Expected: {'pois' if expected_output == pois else 'safe'}")
+    print(f"correct: {correct}/{len(test_data.keys())}")
+    [[1.1953163156648539, -2.3537248305736327], [-0.8755153935490199, -1.0974085618575424], [-1.9926417554499483, -0.8566865622301134]]
+[[6.215197218806081, 5.467199264070173, 7.373075119604682], [-6.272132846323858, -5.333448566864373, -7.423907180379741]]
 
 if __name__ == "__main__":
     main()

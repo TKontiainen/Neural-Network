@@ -1,5 +1,8 @@
-.git
+.gitignore
+.gitignore
 .vscode
-C/
-img.py
-batch.py
+main
+TODO
+Py/batch.py
+Py/img.py
+Py/mincost.py
