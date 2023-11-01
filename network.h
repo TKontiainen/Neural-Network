@@ -11,6 +11,7 @@ typedef struct {
     int numInputs; // How many inputs does the first layer take
     int numOutputs; // How many outputs does the last layer have
     layer* layers; // The layers
+    layer lastLayer; // The last layer
 } network;
 
 // Create a new neural network
@@ -30,5 +31,8 @@ double Cost(network network, dataPoint dataPoint);
 
 // Get the average cost for multiple datapoints
 double AverageCost(network network, dataPoint* dataPoints, int numDataPoints);
+
+// Derivative of the cost function eith respect to the activation value
+double DerivativeNodeCostWrtActivation(double activation, double expectedActivation);
 
 #endif
