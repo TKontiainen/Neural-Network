@@ -110,20 +110,6 @@ double AverageCost(network network, dataPoint* dataPoints, int numDataPoints) {
     return avg;
 }
 
-<<<<<<< HEAD
-double DerivativeCostWrtActivation(double activation, double expectedActivation) {
-    return 2.0 * (activation - expectedActivation);
-}
-
-void ApplyAllGradients(network network, double learnRate) {
-    layer layer;
-    int numLayer;
-    for (numLayer = 0; numLayer < network.numLayers-1; ++numLayer) {
-        layer = *(network.layers+numLayer);
-        ApplyGradients(layer, learnRate);
-    }
-}
-=======
 double DerivativeNodeCostWrtActivation(double activation, double expectedActivation) {
 	return 2.0 * (activation - expectedActivation);
 }
@@ -149,4 +135,3 @@ void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, in
 		}
 	}
 }
->>>>>>> 40c6e17098670b2318a5ba75341dea69e3026097
