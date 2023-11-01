@@ -13,6 +13,7 @@ network Network(int numLayers, int* layerSizes) {
     network.numLayers = numLayers;
     network.layerSizes = layerSizes;
     network.layers = malloc((numLayers) * sizeof(layer));
+    network.lastLayer = *(network.layers+network.numLayers-1);
 
     network.maxInputs = 0; // How many inputs does the layer with the most inputs take
     network.numInputs = *layerSizes;
@@ -65,8 +66,7 @@ void CalculateNetworkOutputs(network network, double* inputs, double* outputs) {
     }
 
     // Calculate the output of the last layer
-    layer = *(network.layers+network.numLayers-1);
-    CalculateLayerActivations(layer, temp_inputs, outputs);
+    CalculateLayerActivations(network.lastLayer, temp_inputs, outputs);
 
     free(temp_inputs);
 }
@@ -83,12 +83,12 @@ double Cost(network network, dataPoint dataPoint) {
     double* outputs = malloc(network.numOutputs*sizeof(double));
     CalculateNetworkOutputs(network, dataPoint.inputs, outputs);
     
-    double output, expected_output;
+    double output, expectedOutput;
     int i;
     for (i = 0; i < network.numOutputs; ++i) {
         output = *(outputs + i);
-        expected_output = *(dataPoint.expectedOutputs + i);
-        cost += NodeCost(output, expected_output);
+        expectedOutput = *(dataPoint.expectedOutputs + i);
+        cost += NodeCost(output, expectedOutput);
     }
 
     return cost;
@@ -110,6 +110,7 @@ double AverageCost(network network, dataPoint* dataPoints, int numDataPoints) {
     return avg;
 }
 
+<<<<<<< HEAD
 double DerivativeCostWrtActivation(double activation, double expectedActivation) {
     return 2.0 * (activation - expectedActivation);
 }
@@ -122,3 +123,30 @@ void ApplyAllGradients(network network, double learnRate) {
         ApplyGradients(layer, learnRate);
     }
 }
+=======
+double DerivativeNodeCostWrtActivation(double activation, double expectedActivation) {
+	return 2.0 * (activation - expectedActivation);
+}
+
+
+void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, int learnrate) {
+
+	double* outputs = (double*)malloc(network.numOutputs*sizeof(double));
+
+	dataPoint dataPoint;
+
+	double output, expectedOutput, derivative;
+
+	int numDataPoint, i;
+	for (numDataPoint = 0; numDataPoint < network.numOutputs; ++numDataPoint) {
+		dataPoint = *(dataPoints + numDataPoint);
+		CalculateNetworkOutputs(network, dataPoint.inputs, outputs);
+		// Go through each output node and calculate it's cost
+		for (i = 0; i < network.numOutputs; ++i) {
+			output = *(outputs+i);
+			expectedOutput = *(dataPoint.expectedOutputs+i);
+			derivative = DerivativeNodeCostWrtActivation(output, expectedOutput);
+		}
+	}
+}
+>>>>>>> 40c6e17098670b2318a5ba75341dea69e3026097
