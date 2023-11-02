@@ -1,7 +1,0 @@
-.gitignore
-.git
-.vscode
-main
-Py/batch.py
-Py/img.py
-Py/mincost.py
