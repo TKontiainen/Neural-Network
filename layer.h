@@ -12,6 +12,10 @@ typedef struct {
     double* gradientB;
     double* biases;
     /* These arrays are accessed like biases[nodeOut] */
+
+    // For backpropagation
+    double* weightedInputs;
+    double* activations;
 } layer;
 
 // Print a layer's weights

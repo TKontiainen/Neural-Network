@@ -182,8 +182,7 @@ def main():
         else:
             print(f"Input: {inputs} Output: {'pois' if output else 'safe'} Expected: {'pois' if expected_output == pois else 'safe'}")
     print(f"correct: {correct}/{len(test_data.keys())}")
-    [[1.1953163156648539, -2.3537248305736327], [-0.8755153935490199, -1.0974085618575424], [-1.9926417554499483, -0.8566865622301134]]
-[[6.215197218806081, 5.467199264070173, 7.373075119604682], [-6.272132846323858, -5.333448566864373, -7.423907180379741]]
+
 
 if __name__ == "__main__":
     main()

@@ -30,6 +30,9 @@ layer Layer(int numNodesIn, int numNodesOut) {
 
     InitializeWeightsAndBiases(layer);
 
+    layer.activations = (double*)malloc(numNodesIn * sizeof(double));
+    layer.weightedInputs = (double*)malloc(numNodesOut * sizeof(double));
+
     return layer;
 }
 
@@ -59,15 +62,17 @@ void FreeLayer(layer layer) {
 // Calculate the activations of a layer
 void CalculateLayerActivations(layer layer, double* inputs, double* activations) {
     int nodeIn, nodeOut; 
-    double weightedOutput, input, weight;
+    double weightedInput, activation, input, weight;
     for (nodeOut = 0; nodeOut < layer.numNodesOut; ++nodeOut) {
-        weightedOutput = *(layer.biases + nodeOut);
+        weightedInput = *(layer.biases + nodeOut);
         for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
             input = *(inputs + nodeIn);
             weight = *(layer.weights + nodeOut * layer.numNodesIn + nodeIn);
-            weightedOutput += input * weight;
+            weightedInput += input * weight;
         }
-        *(activations + nodeOut) = Sigmoid(weightedOutput);
+        *(layer.weightedInputs + nodeOut) = weightedInput;
+        activation = Sigmoid(weightedInput);
+        *(activations + nodeOut) = activation;
     }
 }
 

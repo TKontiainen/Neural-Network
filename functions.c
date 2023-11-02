@@ -23,6 +23,6 @@ double DerivativeActivationWrtWeightedInput(double z) {
 void copy(double* a1, double* a2, int n) {
     int i;
     for (i = 0; i < n; ++i) {
-        *(a2+1) = *(a1+i);
+        *(a2+i) = *(a1+i);
     }
 }
