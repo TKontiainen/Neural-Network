@@ -50,6 +50,6 @@ void CalculateGradients(network network, double derivative, int numActivation, i
 void ApplyAllGradients(network network, double learnRate);
 
 // Backpropagation
-void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, int learnrate);
+void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, double learnrate);
 
 #endif

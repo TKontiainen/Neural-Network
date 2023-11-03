@@ -137,18 +137,18 @@ void CalculateGradients(network network, double derivative, int numActivation, i
     int nodeIn;
     double activation, weight;
 
-    *(layer.gradientB + numActivation) = derivative / numDataPoints;
+    *(layer.gradientB + numActivation) = derivative;
 
     for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
         activation = *(layer.activations + nodeIn);
         weight = *(layer.weights + numActivation * layer.numNodesIn + nodeIn);
-        *(layer.gradientW + numActivation * layer.numNodesIn + nodeIn) = activation * derivative / numDataPoints;
+        *(layer.gradientW + numActivation * layer.numNodesIn + nodeIn) = activation * derivative;
         CalculateGradients(network, weight*derivative, nodeIn, numLayer-1, numDataPoints);
     }
 }
 
 // Backpropagation
-void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, int learnRate) {
+void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, double learnRate) {
     double* outputs = (double*)malloc(network.numOutputs*sizeof(double)); // The output layer activations
     int numDataPoint, numOutput; 
     dataPoint dataPoint;
@@ -168,7 +168,6 @@ void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, in
             CalculateGradients(network, a, output, network.numLayers-1, numDataPoints);
         }
     }
-
     ApplyAllGradients(network, learnRate);
 }
 
