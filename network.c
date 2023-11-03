@@ -142,6 +142,7 @@ void CalculateGradients(network network, double derivative, int numActivation, i
     for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
         activation = *(layer.activations + nodeIn);
         weight = *(layer.weights + numActivation * layer.numNodesIn + nodeIn);
+	printf("DEBUG: [CalculateGradients Ln 145] numLayer: %d, nodeIn: %d, numActivation: %d, gradient: %lf\n", numLayer, nodeIn, numActivation, activation*derivative);
         *(layer.gradientW + numActivation * layer.numNodesIn + nodeIn) = activation * derivative;
         CalculateGradients(network, weight*derivative, nodeIn, numLayer-1, numDataPoints);
     }
@@ -155,7 +156,7 @@ void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, do
     double output, expectedOutput, a;
 
     // Loop through every datapoint
-    for (numDataPoint = 0; numDataPoint < numDataPoints; ++numDataPoint) {
+    for (numDataPoint = 0; numDataPoint < 1; ++numDataPoint) {
         // Calculate output values for datapoint
         dataPoint = *(dataPoints + numDataPoint);
         CalculateNetworkOutputs(network, dataPoint.inputs, outputs);

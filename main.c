@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     double cost = AverageCost(network, dataPoints, 48);
     printf("%lf\n", cost);
 
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 1; ++i) {
 	BackPropagate(network, dataPoints, 48, 0.25);
     }
     
