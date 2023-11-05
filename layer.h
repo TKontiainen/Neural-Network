@@ -1,39 +1,63 @@
 #ifndef LAYER_H_
 #define LAYER_H_
 
-typedef struct {
+/*
+The layer structure has the following properties
+    -- The number of incoming and outgoing nodes
+    -- The weights and biases
+    -- The Gradient vectors for the weights and biases
+    -- The inputs, weightedInputs and output activation values
+*/
+typedef struct
+{
+
     int numNodesIn;
     int numNodesOut;
 
-    double* gradientW;
+    double* costGradientW; // Gradient vector for the weights
     double* weights;
-    /* These arrays are basically accessed like weights[nodeOut][nodeIn] */
 
-    double* gradientB;
+    double* costGradientB; // Gradient vector for the biases
     double* biases;
-    /* These arrays are accessed like biases[nodeOut] */
 
-    // For backpropagation
+    double* inputs;
     double* weightedInputs;
-    double* activations;
-} layer;
+    double* outputActivations;
+
+} Layer;
 
 // Print a layer's weights
-void PrintWeights(layer layer);
+void PrintWeights(Layer layer);
 
-// Create a new layer
-layer Layer(int numNodesIn, int numNodesOut);
+// print a layer's biases
+void PrintBiases(Layer layer);
 
-// Initialize random values to all the weights and set biases to all 0
-void InitializeWeightsAndBiases(layer layer);
+// NewLayer() returns a new layer with randomized weights
+Layer NewLayer(int numNodesIn, int numNodesOut);
 
-// Free all the memory used for a layer
-void FreeLayer(layer layer);
+// InitializeWeightsAndBiases() sets random values to all the layers weights
+void InitializeWeights(Layer layer);
 
-// Calculate the activations of a layer
-void CalculateLayerActivations(layer layer, double* inputs, double* activations);
+// FreeLayer() frees all the memory used for a layer
+void FreeLayer(Layer layer);
 
-// Apply the gradients
-void ApplyGradients(layer layer, double learnRate);
+// CalculateLayerActivations() calculates the output activations for a layer
+void CalculateLayerActivations(Layer layer);
+
+/* ApplyGradients() loops through the weights and biases and substracts
+the relevant gradient value multiplied by the learn rate */
+void ApplyGradients(Layer layer, double learnRate);
+
+// ClearGradients() sets all the gradient values to 0
+void ClearGradients(Layer layer);
+
+// CalculateOutputLayerNodeValues() calculates the nodeValues for the output layer
+double* CalculateOutputLayerNodeValues(Layer outputLayer, double* expectedOutputs);
+
+// CalcualteHiddenLayerNodeValues() calculates the nodeValues for a hidden layer
+double* CalculateHiddenLayerNodeValues(Layer hiddenLayer, Layer oldLayer, double* oldNodeValues);
+
+// UpdateGradients() updates the gradients for a layer
+void UpdateGradients(Layer layer, double* nodeValues);
 
 #endif

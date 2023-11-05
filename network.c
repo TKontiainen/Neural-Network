@@ -6,169 +6,153 @@
 #include "functions.h"
 #include "datapoint.h"
 
-// Create a new neural network
-network Network(int numLayers, int* layerSizes) {
-    network network;
+Network NewNetwork(int numLayers, int* layerSizes)
+{
+    Network network;
 
-    network.numLayers = numLayers-1;
-    network.layerSizes = layerSizes;
-    network.layers = malloc(network.numLayers * sizeof(layer));
+    network.numLayers = --numLayers;
+    network.layers = (Layer*)malloc(numLayers * sizeof(Layer));
 
-    network.numInputs = *layerSizes;
-    network.numOutputs = *(layerSizes+network.numLayers);
-    network.maxInputs = 0; // How many inputs does the layer with the most inputs take
+    network.numInputs = layerSizes[0];
+    network.numOutputs = layerSizes[numLayers];
+    network.maxNodesIn = network.numInputs;
 
-    // Initialize the layers
-    int numLayer;
-    layer layer;
-    int numNodesIn, numNodesOut;
-    for (numLayer = 0; numLayer < network.numLayers; ++numLayer) {
+    for (int layerIndex = 0; layerIndex < numLayers; layerIndex++)
+    {
+        int numNodesIn = layerSizes[layerIndex];
+        int numNodesOut = layerSizes[layerIndex + 1];
 
-        numNodesIn = *(layerSizes+numLayer); // Number of incoming values
-        numNodesOut = *(layerSizes+numLayer+1);
-        layer = Layer(numNodesIn, numNodesOut); // Create layer
-        *(network.layers+numLayer) = layer; // Put layer into layers array'
+        Layer layer = NewLayer(numNodesIn, numNodesOut);
+        network.layers[layerIndex] = layer;
 
-        // update maxInputs
-        if (numNodesIn > network.maxInputs) {
-            network.maxInputs = numNodesIn;
+        if (numNodesIn < network.maxNodesIn)
+        {
+            network.maxNodesIn = numNodesIn;
         }
     }
+
+    network.outputValues = (double*)malloc(network.numOutputs * sizeof(double));
 
     return network;
 }
 
-// Free all the memory used by the network
-void FreeNetwork(network network) {
-    layer layer;
-    int numLayer;
-    for (numLayer = 0; numLayer < network.numLayers; ++numLayer) {
-        layer = *(network.layers+numLayer);
+void FreeNetwork(Network network)
+{
+    // Loop trough and call FreeLayer() on each layer
+    for (int layerIndex = 0; layerIndex < network.numLayers; layerIndex++)
+    {
+        Layer layer = network.layers[layerIndex];
         FreeLayer(layer);
     }
 
     free(network.layers);
+    free(network.outputValues);
 }
 
-// Calculate the outputs for a network
-void CalculateNetworkOutputs(network network, double* inputs, double* outputs) {
+void CalculateNetworkOutputs(Network network, double* inputs)
+{
+    // Copy the inputs into the first layer
+    dcopy(inputs, firstLayer.inputs, network.numInputs);
 
-    double* temp_inputs = (double*)malloc(network.maxInputs*sizeof(double)); // Temporary inputs passed from layer to layer
-    copy(inputs, temp_inputs, network.numInputs);
-
-    layer layer;
-    int numLayer;
-    // Loop through the layers and pass the outputs to the next layer
-    for (numLayer = 0; numLayer < network.numLayers; ++numLayer) {
-        layer = *(network.layers + numLayer);
-        copy(temp_inputs, layer.activations, layer.numNodesIn);
-        CalculateLayerActivations(layer, temp_inputs, temp_inputs);
+    // Loop through all the hidden layers and copy their outputs into the next layers inputs
+    for (int layerIndex = 0; layerIndex < network.numLayers - 1; layerIndex++)
+    {
+        Layer layer = network.layers[layerIndex];
+        CalculateLayerActivations(layer);
+        
+        Layer nextLayer = network.layers[layerIndex + 1];
+        dcopy(layer.outputActivations, nextLayer.inputs, layer.numNodesOut);
     }
 
-    copy(temp_inputs, outputs, network.numOutputs);
-    free(temp_inputs);
+    // Calculate the outputs of the last layer
+    CalculateLayerActivations(lastLayer);
+
+    // Copy them into network.outputValues
+    dcopy(lastLayer.outputActivations, network.outputValues, network.numOutputs);
 }
 
-// Get the cost of a single output node (a-y)^2
 double NodeCost(double activation, double expectedActivation) {
     double diff = activation - expectedActivation;
-    return pow(diff, 2.0);
+    return diff * diff;
 }
 
-// Get the cost for a single datapoint
-double Cost(network network, dataPoint dataPoint) {
-    double cost;
-    cost = 0.0;
+double DerivativeNodeCostWrtActivation(double activation, double expectedActivation) {
+	return 2.0 * (activation - expectedActivation);
+}
 
-    double* outputs = malloc(network.numOutputs*sizeof(double));
-    CalculateNetworkOutputs(network, dataPoint.inputs, outputs);
-    
-    double output, expectedOutput;
-    int i;
-    for (i = 0; i < network.numOutputs; ++i) {
-        output = *(outputs + i);
-        expectedOutput = *(dataPoint.expectedOutputs + i);
+double Cost(Network network, DataPoint dataPoint)
+{
+    double cost = 0.0;
+
+    // Calculate the outputs of the network
+    CalculateNetworkOutputs(network, dataPoint.inputs);
+
+    // Loop through each output and add its nodecost to the total cost
+    for (int outputIndex = 0; outputIndex < network.numOutputs; outputIndex++)
+    {
+        double output = network.outputValues[outputIndex];
+        double expectedOutput = dataPoint.expectedOutputs[outputIndex];
         cost += NodeCost(output, expectedOutput);
     }
 
     return cost;
 }
 
-// Get the average cost for multiple datapoints
-double AverageCost(network network, dataPoint* dataPoints, int numDataPoints) {
-    double cost;
-    dataPoint dataPoint;
-    int i;
+double AverageCost(Network network, DataPoint* dataPoints, int numDataPoints)
+{
+    double cost = 0.0;
 
-    cost = 0;
-    for (i = 0; i < numDataPoints; ++i) {
-        dataPoint = *(dataPoints+i);
+    for (int dataPointIndex = 0; dataPointIndex < numDataPoints; dataPointIndex++) {
+        DataPoint dataPoint = *(dataPoints + dataPointIndex);
         cost += Cost(network, dataPoint);
     }
 
-    double avg = cost / i;
+    double averageCost = cost / numDataPoints;
 
-    return avg;
+    return averageCost;
 }
 
-// Derivative of the cost function with respect to the activation value
-double DerivativeNodeCostWrtActivation(double activation, double expectedActivation) {
-	return 2.0 * (activation - expectedActivation);
-}
-
-// Apply gradients for all layers
-void ApplyAllGradients(network network, double learnRate) {
-    layer layer;
-    int numLayer;
-    for (numLayer = 0; numLayer < network.numLayers-1; ++numLayer) {
-        layer = *(network.layers+numLayer);
+void ApplyAllGradients(Network network, double learnRate)
+{
+    for (int layerIndex = 0; layerIndex < network.numLayers; layerIndex++)
+    {
+        Layer layer =*(network.layers + layerIndex);
         ApplyGradients(layer, learnRate);
     }
 }
 
-// Calculate the gradients
-void CalculateGradients(network network, double derivative, int numActivation, int numLayer, int numDataPoints) {
-    if (numLayer < 0) {
-        return;
-    }
-    layer layer = *(network.layers + numLayer);
-    double weightedInput = *(layer.weightedInputs + numActivation);
-    derivative *= DerivativeActivationWrtWeightedInput(weightedInput);
-    int nodeIn;
-    double activation, weight;
-
-    *(layer.gradientB + numActivation) = derivative;
-
-    for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
-        activation = *(layer.activations + nodeIn);
-        weight = *(layer.weights + numActivation * layer.numNodesIn + nodeIn);
-	printf("DEBUG: [CalculateGradients Ln 145] numLayer: %d, nodeIn: %d, numActivation: %d, gradient: %lf\n", numLayer, nodeIn, numActivation, activation*derivative);
-        *(layer.gradientW + numActivation * layer.numNodesIn + nodeIn) = activation * derivative;
-        CalculateGradients(network, weight*derivative, nodeIn, numLayer-1, numDataPoints);
+void ClearAllGradients(Network network)
+{
+    for (int layerIndex = 0; layerIndex < network.numLayers; layerIndex++)
+    {
+        Layer layer = *(network.layers + layerIndex);
+        ClearGradients(layer);
     }
 }
 
-// Backpropagation
-void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, double learnRate) {
-    double* outputs = (double*)malloc(network.numOutputs*sizeof(double)); // The output layer activations
-    int numDataPoint, numOutput; 
-    dataPoint dataPoint;
-    double output, expectedOutput, a;
+void UpdateAllGradients(Network network, DataPoint dataPoint)
+{
+    CalculateNetworkOutputs(network, dataPoint.inputs);
 
-    // Loop through every datapoint
-    for (numDataPoint = 0; numDataPoint < 1; ++numDataPoint) {
-        // Calculate output values for datapoint
-        dataPoint = *(dataPoints + numDataPoint);
-        CalculateNetworkOutputs(network, dataPoint.inputs, outputs);
+    double* nodeValues = CalculateOutputLayerNodeValues(lastLayer, dataPoint.expectedOutputs);
+    UpdateGradients(lastLayer, nodeValues);
 
-        // Loop through all the output nodes
-        for (numOutput = 0; numOutput < network.numOutputs; ++numOutput) {
-            output = *(outputs + numOutput);
-            expectedOutput = *(dataPoint.expectedOutputs + numOutput);
-            a = DerivativeNodeCostWrtActivation(output, expectedOutput);
-            CalculateGradients(network, a, output, network.numLayers-1, numDataPoints);
-        }
+    for (int hiddenLayerIndex = network.numLayers - 2; hiddenLayerIndex >= 0; hiddenLayerIndex--)
+    {
+        Layer hiddenLayer = network.layers[hiddenLayerIndex];
+        nodeValues = CalculateHiddenLayerNodeValues(hiddenLayer, network.layers[hiddenLayerIndex + 1], nodeValues);
+        UpdateGradients(hiddenLayer, nodeValues);
     }
-    ApplyAllGradients(network, learnRate);
 }
 
+void Learn(Network network, DataPoint* trainingData, int sizeTrainingData, double learnRate)
+{
+    for (int dataPointIndex = 0; dataPointIndex < sizeTrainingData; dataPointIndex++)
+    {
+        DataPoint dataPoint = trainingData[dataPointIndex];
+        UpdateAllGradients(network, dataPoint);
+    }
+
+    ApplyAllGradients(network, learnRate / sizeTrainingData);
+    ClearAllGradients(network);
+}

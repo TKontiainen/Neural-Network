@@ -10,51 +10,53 @@
 #include "functions.h"
 #include "datapoint.h"
 
+#define NUM_DATAPOINTS 48
+#define BATCH_SIZE 6
+#define NUM_BATCHES NUM_DATAPOINTS / BATCH_SIZE
 
-// {{3, 3}, {4, 4}, {3, 3}, {5, 5}, {5, 5}, {9, 9}, {3, 3}, {9, 9}, {2, 2}, {2, 2}, {10, 10}, {4, 4}, {10, 10}, {3, 3}, {6, 6}, {10, 10}, {10, 10}, {8, 8}, {4, 4}, {8, 8}, {5, 5}, {1, 1}, {4, 4}, {8, 8}, {8, 8}, {2, 2}, {9, 9}, {4.5, 4.5}, {1, 1}, {8, 8}, {5, 5}, {2, 2}, {5.5, 5.5}, {3, 3}, {7, 7}, {6, 6}, {6, 6}, {5, 5}, {10, 10}, {8, 8}, {6, 6}, {3, 3}, {7, 7}, {4, 4}, {6, 6}, {9, 9}, {9, 9}, {6, 6}}
-// {{0, 0}, {0, 0}, {1, 1}, {1, 1}, {1, 1}, {0, 0}, {1, 1}, {0, 0}, {1, 1}, {1, 1}, {0, 0}, {1, 1}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 1}, {0, 0}, {1, 1}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 1}, {1, 1}, {0, 0}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 0}, {1, 1}, {0, 0}, {0, 0}, {0, 0}}
-
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     srand(time(0)); // Set the seed for the RNG
 
-    int layerSizes[] = {2, 3, 3, 2};
-    int numLayers = 4;
+    /***************************************************************************************************************************************/
 
-    network network;
-    network = Network(numLayers, layerSizes);
-
-    double dataInputs[48][2] = {
-        {3, 3}, {4, 4}, {3, 3}, {5, 5}, {5, 5}, {9, 9}, {3, 3}, {9, 9}, {2, 2}, {2, 2}, {10, 10}, {4, 4},
-        {10, 10}, {3, 3}, {6, 6}, {10, 10}, {10, 10}, {8, 8}, {4, 4}, {8, 8}, {5, 5}, {1, 1}, {4, 4}, {8, 8},
-        {8, 8}, {2, 2}, {9, 9}, {4.5, 4.5}, {1, 1}, {8, 8}, {5, 5}, {2, 2}, {5.5, 5.5}, {3, 3}, {7, 7}, {6, 6},
-        {6, 6}, {5, 5}, {10, 10}, {8, 8}, {6, 6}, {3, 3}, {7, 7}, {4, 4}, {6, 6}, {9, 9}, {9, 9}, {6, 6}
-    };
-
-    double dataExpectedOutputs[48][2] = {
-        {0, 0}, {0, 0}, {1, 1}, {1, 1}, {1, 1}, {0, 0}, {1, 1}, {0, 0}, {1, 1}, {1, 1}, {0, 0}, {1, 1},
-        {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 1}, {0, 0}, {1, 1}, {0, 0},
-        {0, 0}, {0, 0}, {0, 0}, {1, 1}, {1, 1}, {0, 0}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 0}, {0, 0},
-        {0, 0}, {0, 0}, {0, 0}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 0}, {1, 1}, {0, 0}, {0, 0}, {0, 0}
-    };
-
-    dataPoint* dataPoints = (dataPoint*)malloc(48 * sizeof(dataPoint));
-    int numDataPoint;
-    for (numDataPoint = 0; numDataPoint < 48; ++numDataPoint) {
-        *(dataPoints + numDataPoint) = DataPoint(*(dataInputs + numDataPoint), *(dataExpectedOutputs + numDataPoint));
-    }
-
-    double cost = AverageCost(network, dataPoints, 48);
-    printf("%lf\n", cost);
-
-    for (int i = 0; i < 1; ++i) {
-	BackPropagate(network, dataPoints, 48, 0.25);
-    }
+    double dataInputs[NUM_DATAPOINTS][2] = {{5, 8}, {8, 8}, {4, 8}, {7, 8}, {9, 7}, {9, 6}, {9, 5}, {10, 5}, {10, 4}, {10, 3}, {10, 2}, {10, 1}, {8, 9}, {4, 10}, {3, 10}, {6, 7}, {6, 10}, {8, 6}, {4, 9}, {8, 4}, {8, 2}, {9, 2}, {9, 3}, {6, 6}, {3, 7}, {2, 8}, {1, 8}, {6, 9}, {5, 6}, {2, 6}, {2, 4}, {1, 1}, {2, 2}, {3, 2}, {5, 1}, {6, 4}, {7, 2}, {8, 1}, {3, 6}, {3, 5}, {5, 5}, {4, 4.5}, {5, 4}, {3, 3.5}, {4, 3}, {5.5, 3}, {6, 2.5}, {4.5, 2}};
+    double dataExpectedOutputs[NUM_DATAPOINTS][2] = {{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}};
     
+    DataPoint* dataPoints = (DataPoint*)malloc(NUM_DATAPOINTS * sizeof(DataPoint));
+    for (int dataPointIndex = 0; dataPointIndex < NUM_DATAPOINTS; dataPointIndex++)
+    {
+        dataPoints[dataPointIndex] = NewDataPoint(dataInputs[dataPointIndex], dataExpectedOutputs[dataPointIndex]);
+    }
 
-    cost = AverageCost(network, dataPoints, 48);
-    printf("%lf\n", cost);
+    shuffle(dataPoints, NUM_DATAPOINTS);
+
+    /***************************************************************************************************************************************/
+
+    // Initialize the network
+    int numLayers = 4;
+    int layerSizes[] = {2, 16, 10, 2};
+    Network network;
+    network = NewNetwork(numLayers, layerSizes);
+
+    // LEARN
+    double cost = AverageCost(network, dataPoints, NUM_DATAPOINTS);
+
+    for (int epoch = 0; ; epoch++)
+    {
+        printf("Epochs: %d, cost = %lf\n", epoch, cost);
+        
+        for (int batchIndex = 0; batchIndex < NUM_BATCHES; batchIndex++)
+        {
+            DataPoint* batch = dataPoints + batchIndex * BATCH_SIZE;
+            Learn(network, batch, BATCH_SIZE, 0.25);
+        }
+
+        cost = AverageCost(network, dataPoints, NUM_DATAPOINTS);
+    }
 
     FreeNetwork(network);
+    free(dataPoints);
 
     return 0;
 }

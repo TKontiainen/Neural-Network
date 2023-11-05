@@ -1,88 +1,171 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-
 #include "layer.h"
+#include "network.h"
 #include "functions.h"
 
-// Print a layer's weights
-void PrintWeights(layer layer) {
-    int nodeIn, nodeOut;
-    for (nodeOut = 0; nodeOut < layer.numNodesOut; ++nodeOut) {
-        for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
-            printf("%lf\n", *(layer.weights + nodeOut * layer.numNodesIn + nodeIn));
+void PrintWeights(Layer layer)
+{
+    for (int nodeOut = 0; nodeOut < layer.numNodesOut; nodeOut++)
+    {
+        for (int nodeIn = 0; nodeIn < layer.numNodesIn; nodeIn++)
+        {
+            printf("DEBUG: weights[%d][%d] = %lf\n", nodeOut, nodeIn, layer.weights[nodeOut * layer.numNodesIn + nodeIn]);
         }
     }
 }
+void PrintBiases(Layer layer)
+{
+    for (int nodeOut = 0; nodeOut < layer.numNodesOut; nodeOut++) 
+    {
+        printf("DEBUG: biases[%d] = %lf\n", nodeOut, layer.biases[nodeOut]);
+    }
+}
 
-// Create a new layer
-layer Layer(int numNodesIn, int numNodesOut) {
-    layer layer;
+Layer NewLayer(int numNodesIn, int numNodesOut)
+{
+    Layer layer;
 
-    layer.numNodesIn = numNodesIn;
+    layer.numNodesIn  = numNodesIn;
     layer.numNodesOut = numNodesOut;
 
-    layer.gradientW = (double*)malloc(numNodesIn * numNodesOut * sizeof(double));
-    layer.weights = (double*)malloc(numNodesIn * numNodesOut * sizeof(double)); 
+    layer.costGradientW = (double*)malloc(numNodesIn * numNodesOut * sizeof(double));
+    layer.weights       = (double*)malloc(numNodesIn * numNodesOut * sizeof(double));
+
+    layer.costGradientB = (double*)malloc(numNodesOut * sizeof(double)); 
+    layer.biases        = (double*)malloc(numNodesOut * sizeof(double)); 
     
-    layer.gradientB = (double*)malloc(numNodesOut * sizeof(double)); 
-    layer.biases = (double*)malloc(numNodesOut * sizeof(double)); 
+    InitializeWeights(layer);
 
-    InitializeWeightsAndBiases(layer);
-
-    layer.activations = (double*)malloc(numNodesIn * sizeof(double));
-    layer.weightedInputs = (double*)malloc(numNodesOut * sizeof(double));
+    layer.inputs            = (double*)malloc(numNodesIn * sizeof(double));
+    layer.weightedInputs    = (double*)malloc(numNodesOut * sizeof(double));
+    layer.outputActivations = (double*)malloc(numNodesOut * sizeof(double));
 
     return layer;
 }
 
-// Initialize random values to all the weights and set biases to all 0
-void InitializeWeightsAndBiases(layer layer) {
-    int nodeIn, nodeOut;
-    double r;
-    double *a;
-    for (nodeOut = 0; nodeOut < layer.numNodesOut; ++nodeOut) {
-        *(layer.biases + nodeOut) = 0; // Set the current bias to 0
-        for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
-            r = (randb() * 2.0 - 1.0) / sqrt(layer.numNodesIn); // Calculate a random number
-            a = (layer.weights + nodeOut * layer.numNodesIn + nodeIn); // Calculate the position of the weight
-            *a = r; // Set the weight to the random number
+void InitializeWeights(Layer layer)
+{
+    for (int nodeOut = 0; nodeOut < layer.numNodesOut; nodeOut++)
+    {
+        for (int nodeIn = 0; nodeIn < layer.numNodesIn; nodeIn++)
+        {
+            double randomValue = (randb(2.0) * 2.0 - 1.0);
+            randomValue /= sqrt(layer.numNodesIn); // Scale the random value with the number of inputs
+            layer.weights[nodeOut * layer.numNodesIn + nodeIn] = randomValue;
         }
     }
 }
 
-// Free all the memory used for a layer
-void FreeLayer(layer layer) {
-    free(layer.gradientW);
+void FreeLayer(Layer layer)
+{
+    free(layer.costGradientW);
     free(layer.weights);
-    free(layer.gradientB);
+    free(layer.costGradientB);
     free(layer.biases);
+    free(layer.inputs);
+    free(layer.weightedInputs);
+    free(layer.outputActivations);
 }
 
-// Calculate the activations of a layer
-void CalculateLayerActivations(layer layer, double* inputs, double* activations) {
-    int nodeIn, nodeOut; 
-    double weightedInput, activation, input, weight;
-    for (nodeOut = 0; nodeOut < layer.numNodesOut; ++nodeOut) {
-        weightedInput = *(layer.biases + nodeOut);
-        for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
-            input = *(inputs + nodeIn);
-            weight = *(layer.weights + nodeOut * layer.numNodesIn + nodeIn);
-            weightedInput += input * weight;
+void CalculateLayerActivations(Layer layer)
+{
+    for (int nodeOut = 0; nodeOut < layer.numNodesOut; nodeOut++)
+    {
+        double weightedInput = layer.biases[nodeOut];
+
+        for (int nodeIn = 0; nodeIn < layer.numNodesIn; nodeIn++)
+        {
+            double inputNodeValue = layer.inputs[nodeIn];
+            double weight = layer.weights[nodeOut * layer.numNodesIn + nodeIn];
+            weightedInput += inputNodeValue * weight;
         }
-        *(layer.weightedInputs + nodeOut) = weightedInput;
-        activation = Sigmoid(weightedInput);
-        *(activations + nodeOut) = activation;
+
+        layer.weightedInputs[nodeOut] = weightedInput;
+
+        double outputActivationValue = ActivationFunction(weightedInput);
+        layer.outputActivations[nodeOut] = outputActivationValue;
     }
 }
 
-// Apply the gradients
-void ApplyGradients(layer layer, double learnRate) {
-    int nodeIn, nodeOut;
-    for (nodeOut = 0; nodeOut < layer.numNodesOut; ++nodeOut) {
-        *(layer.biases + nodeOut) -= *(layer.gradientB + nodeOut) * learnRate;
-        for (nodeIn = 0; nodeIn < layer.numNodesIn; ++nodeIn) {
-            *(layer.weights + nodeOut * layer.numNodesIn + nodeIn) -= *(layer.gradientW + nodeOut * layer.numNodesIn + nodeIn) * learnRate;
+void ApplyGradients(Layer layer, double learnRate)
+{
+    for (int nodeOut = 0; nodeOut < layer.numNodesOut; nodeOut++)
+    {
+        double biasGradientValue = layer.costGradientB[nodeOut];
+        layer.biases[nodeOut] -= biasGradientValue * learnRate;
+
+        for (int nodeIn = 0; nodeIn < layer.numNodesIn; nodeIn++)
+        {
+            double weightGradientValue = layer.costGradientW[nodeOut * layer.numNodesIn + nodeIn];
+            // printf("DEBUG: nodeOut = %d, nodeIn = %d, weightGradientValue = %lf, weightGradientValue * learnRate = %lf\n", nodeOut, nodeIn, weightGradientValue, weightGradientValue * learnRate);
+            layer.weights[nodeOut * layer.numNodesIn + nodeIn] -= weightGradientValue * learnRate;
         }
+    }
+}
+
+void ClearGradients(Layer layer)
+{
+    for (int nodeOut = 0; nodeOut < layer.numNodesOut; nodeOut++)
+    {
+        layer.costGradientB[nodeOut] = 0.0;
+        for (int nodeIn = 0; nodeIn < layer.numNodesIn; nodeIn++)
+        {
+            layer.costGradientW[nodeOut * layer.numNodesIn + nodeIn] = 0.0;
+        }
+    }
+}
+
+double* CalculateOutputLayerNodeValues(Layer outputLayer, double* expectedOutputs)
+{
+    double* nodeValues = (double*)malloc(outputLayer.numNodesOut * sizeof(double));
+
+    for (int outputIndex = 0; outputIndex < outputLayer.numNodesOut; outputIndex++)
+    {
+        double costDerivative = DerivativeNodeCostWrtActivation(outputLayer.outputActivations[outputIndex], expectedOutputs[outputIndex]);
+        double activationDerivative = DerivativeActivationWrtWeightedInput(outputLayer.weightedInputs[outputIndex]);
+        nodeValues[outputIndex] = costDerivative * activationDerivative;
+    }
+
+    return nodeValues;
+}
+
+double* CalculateHiddenLayerNodeValues(Layer hiddenLayer, Layer oldLayer, double* oldNodeValues)
+{
+    double* newNodeValues = (double*)malloc(hiddenLayer.numNodesOut * sizeof(double));
+
+    for (int newNodeIndex = 0; newNodeIndex < hiddenLayer.numNodesOut; newNodeIndex++)
+    {
+        double newNodeValue = 0;
+
+        for (int oldNodeIndex = 0; oldNodeIndex < oldLayer.numNodesOut; oldNodeIndex++)
+        {
+            double weightedInputDerivative = oldLayer.weights[oldNodeIndex * oldLayer.numNodesIn + newNodeIndex];
+            newNodeValue += weightedInputDerivative * oldNodeValues[oldNodeIndex];
+        }
+
+        newNodeValue *= DerivativeActivationWrtWeightedInput(hiddenLayer.weightedInputs[newNodeIndex]);
+        newNodeValues[newNodeIndex] = newNodeValue;
+    }
+
+    free(oldNodeValues);
+    
+    return newNodeValues;
+}
+
+void UpdateGradients(Layer layer, double* nodeValues)
+{
+    for (int nodeOut = 0; nodeOut < layer.numNodesOut; nodeOut++)
+    {
+        for (int nodeIn = 0; nodeIn < layer.numNodesIn; nodeIn++)
+        {
+            // Update the weight gradients
+            double weightGradientValue = layer.inputs[nodeIn] * nodeValues[nodeOut];
+            layer.costGradientW[nodeOut * layer.numNodesIn + nodeIn] += weightGradientValue;
+        }
+
+        // Update the bias gradients
+        layer.costGradientB[nodeOut] += nodeValues[nodeOut];
     }
 }

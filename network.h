@@ -4,52 +4,64 @@
 #include "layer.h"
 #include "datapoint.h"
 
-#define firstLayer (*network.layers)
+/*
+The network structure has the following properties
+    -- The number of layers
+    -- The array of the layers
+    -- The number of inputs (number of incoming nodes for the first layer)
+    -- The number of outputs (number of outgoing nodes for the last layer)
+    -- The number of incoming nodes for the layer with the most incoming nodes
+    -- The array of the output values
+*/
+typedef struct
+{
 
-typedef struct {
-    int numLayers; // The number of layers
+    int numLayers;
+    Layer* layers;
 
-    int* layerSizes; // The sizes of the layers
+    int numInputs;
+    int numOutputs;
+    int maxNodesIn;
 
-    layer* layers; // The layers
+    double* outputValues;
 
-    int numInputs; // How many inputs does the first layer take
+} Network;
 
-    int numOutputs; // How many outputs does the last layer have
+#define firstLayer (network.layers[0])
+#define lastLayer (network.layers[network.numLayers - 1])
 
-    int maxInputs; // How many inputs does the layer with the most inputs take
+// NewNetwork() returns a new network
+Network NewNetwork(int numLayers, int* layerSizes);
 
+// FreeNetwork() frees all the memory used for a network
+void FreeNetwork(Network network);
 
-} network;
+/* CalculateNetworkOutput() calculates the outputs of the first layer
+with the inputs and then uses those outputs to calculate the next
+layers outputs and so on */
+void CalculateNetworkOutputs(Network network, double* inputs);
 
-// Create a new neural network
-network Network(int numLayers, int* layerSizes);
-
-// Free all the memory used by the network
-void FreeNetwork(network network);
-
-// Calculate the outputs for a network
-void CalculateNetworkOutputs(network network, double* inputs, double* outputs);
-
-// Get the cost of a single output node (a-y)^2
+// NodeCost() returns the cost of a single output node (a-y)^2
 double NodeCost(double activation, double expectedActivation);
 
-// Get the cost for a single datapoint
-double Cost(network network, dataPoint dataPoint);
-
-// Get the average cost for multiple datapoints
-double AverageCost(network network, dataPoint* dataPoints, int numDataPoints);
-
-// Derivative of the cost function with respect to the activation value
 double DerivativeNodeCostWrtActivation(double activation, double expectedActivation);
 
-// Calculate the gradients
-void CalculateGradients(network network, double derivative, int numActivation, int numLayer, int numDataPoints);
+// Cost() returns the total cost of the network for a single datapoint
+double Cost(Network network, DataPoint dataPoint);
 
-// Apply gradients for all layers
-void ApplyAllGradients(network network, double learnRate);
+// AverageCost() returns the average cost for a number of datapoints
+double AverageCost(Network network, DataPoint* dataPoints, int numDataPoints);
 
-// Backpropagation
-void BackPropagate(network network, dataPoint* dataPoints, int numDataPoints, double learnrate);
+// ApplyAllGradients() calls ApplyGradients() for all layers
+void ApplyAllGradients(Network network, double learnRate);
+
+// ClearAllGradients() calls ClearGradients() for all layers
+void ClearAllGradients(Network network);
+
+// UpdateAllGradients() updates the gradients of all layers
+void UpdateAllGradients(Network network, DataPoint dataPoint);
+
+// Learn() loops through all the datapoints updating the gradients for each layer and then applying the gradients
+void Learn(Network network, DataPoint* dataPoints, int numDataPoints, double learnRate);
 
 #endif

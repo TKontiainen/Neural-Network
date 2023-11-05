@@ -1,7 +1,7 @@
 #include "datapoint.h"
 
-dataPoint DataPoint(double* inputs, double* expectedOutputs) {
-    dataPoint dataPoint;
+DataPoint NewDataPoint(double* inputs, double* expectedOutputs) {
+    DataPoint dataPoint;
 
     dataPoint.inputs = inputs;
     dataPoint.expectedOutputs = expectedOutputs;

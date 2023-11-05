@@ -1,3 +1,2 @@
-Implement Gradient Descent using backpropagation
-Fix the backpropagation or Gradient Descent idk :(
-
+Use the mnist digits dataset to train the network to classify digits
+Write some code to show the digits
