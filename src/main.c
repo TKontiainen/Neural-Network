@@ -5,10 +5,10 @@
 #include <time.h>
 
 // own libraries
-#include "layer.h"
-#include "network.h"
-#include "functions.h"
-#include "datapoint.h"
+#include "../headers/layer.h"
+#include "../headers/network.h"
+#include "../headers/functions.h"
+#include "../headers/datapoint.h"
 
 #define NUM_DATAPOINTS 48
 #define BATCH_SIZE 6

@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
-#include "functions.h"
-#include "datapoint.h"
-#include "layer.h"
+#include "../headers/functions.h"
+#include "../headers/datapoint.h"
 
 // randb() generates a random double from 0 to 1
 double randb() {

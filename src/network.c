@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "network.h"
-#include "layer.h"
-#include "functions.h"
-#include "datapoint.h"
+#include "../headers/network.h"
+#include "../headers/layer.h"
+#include "../headers/functions.h"
+#include "../headers/datapoint.h"
 
 Network NewNetwork(int numLayers, int* layerSizes)
 {

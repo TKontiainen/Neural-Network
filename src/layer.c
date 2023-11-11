@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "layer.h"
-#include "network.h"
-#include "functions.h"
+#include "../headers/layer.h"
+#include "../headers/network.h"
+#include "../headers/functions.h"
 
 void PrintWeights(Layer layer)
 {

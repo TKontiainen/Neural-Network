@@ -1,4 +1,4 @@
-#include "datapoint.h"
+#include "../headers/datapoint.h"
 
 DataPoint NewDataPoint(double* inputs, double* expectedOutputs) {
     DataPoint dataPoint;
