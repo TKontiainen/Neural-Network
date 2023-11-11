@@ -51,7 +51,7 @@ void InitializeWeights(Layer layer)
     {
         for (int nodeIn = 0; nodeIn < layer.numNodesIn; nodeIn++)
         {
-            double randomValue = (randb(2.0) * 2.0 - 1.0);
+            double randomValue = (randb() * 2.0 - 1.0);
             randomValue /= sqrt(layer.numNodesIn); // Scale the random value with the number of inputs
             layer.weights[nodeOut * layer.numNodesIn + nodeIn] = randomValue;
         }

@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     // LEARN
     double cost = AverageCost(network, dataPoints, NUM_DATAPOINTS);
 
-    for (int epoch = 0; ; epoch++)
+    for (int epoch = 0; epoch < 1000; epoch++)
     {
         printf("Epochs: %d, cost = %lf\n", epoch, cost);
         
